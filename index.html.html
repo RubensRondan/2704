@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2704</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050406;
+      --surface: rgba(255, 255, 255, 0.08);
+      --glow: #ff6ec7;
+      --accent: #ff79c6;
+      --soft: #ffd7f6;
+      --text: #f8f8ff;
+      --muted: #b9b0c6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, rgba(255, 110, 199, 0.12), transparent 20%),
+        radial-gradient(circle at 80% 20%, rgba(138, 85, 255, 0.12), transparent 18%),
+        linear-gradient(180deg, #0c0a12 0%, #050406 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    .page-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      position: relative;
+    }
+
+    .sparkles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.98) 0%, rgba(255,110,199,0.8) 60%, transparent 100%);
+      filter: blur(1px);
+      animation: drift 8s infinite ease-in-out;
+      opacity: 0.8;
+    }
+
+    .sparkle:nth-child(2n) { animation-duration: 10s; }
+    .sparkle:nth-child(3n) { animation-duration: 7s; }
+
+    @keyframes drift {
+      0% { transform: translateY(0) scale(0.9); opacity: 0.8; }
+      50% { transform: translateY(-40px) scale(1.2); opacity: 1; }
+      100% { transform: translateY(0) scale(0.9); opacity: 0.7; }
+    }
+
+    .hero {
+      width: min(1120px, 100%);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 32px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 32px;
+      padding: 36px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 40px 120px rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .hero-card h1 {
+      font-size: clamp(2.5rem, 4vw, 4rem);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      max-width: 12ch;
+      text-shadow: 0 0 28px rgba(255, 110, 199, 0.24);
+    }
+
+    .hero-card p {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.75;
+      max-width: 42rem;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .tag {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--soft);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      transition: transform 0.25s ease;
+    }
+
+    .tag:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 110, 199, 0.35);
+    }
+
+    .tag-button {
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(145deg, rgba(255, 110, 199, 0.16), rgba(255,255,255,0.04));
+      transition: transform 0.25s ease, background 0.25s ease;
+    }
+
+    .tag-button:hover {
+      background: rgba(255, 110, 199, 0.22);
+    }
+
+    .tag-button:focus {
+      outline: 2px solid rgba(255, 110, 199, 0.5);
+      outline-offset: 3px;
+    }
+
+    .book .poem-page,
+    .book .video-page,
+    .book .surprise-page,
+    .book .heart-page {
+      display: none;
+      position: absolute;
+      inset: 22px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+      color: var(--text);
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 2;
+    }
+
+    .book .poem-page.active,
+    .book .video-page.active,
+    .book .surprise-page.active,
+    .book .heart-page.active {
+      display: flex;
+    }
+
+    .poem-page textarea {
+      width: 100%;
+      min-height: 300px;
+      resize: vertical;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.32);
+      color: #fff;
+      padding: 18px 20px;
+      font-family: inherit;
+      font-size: 1rem;
+      line-height: 1.7;
+      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.24);
+    }
+
+    .poem-page textarea::placeholder {
+      color: rgba(255,255,255,0.55);
+    }
+
+    .poem-text {
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 10px;
+      line-height: 1.7;
+    }
+
+    .poem-text p {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .video-box {
+      width: 100%;
+      min-height: 260px;
+      border-radius: 22px;
+      border: 1px dashed rgba(255, 255, 255, 0.24);
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 0.98rem;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .video-player {
+      width: 100%;
+      border-radius: 18px;
+      max-height: 320px;
+      background: #000;
+    }
+
+    .spotify-embed {
+      width: 100%;
+      border-radius: 22px;
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+    }
+
+    .spotify-embed iframe {
+      width: 100%;
+      height: 152px;
+      min-height: auto;
+      border: none;
+      display: block;
+    }
+
+    .image-box {
+      width: 100%;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px dashed rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.04);
+      display: grid;
+      place-items: center;
+      margin-bottom: 20px;
+    }
+
+    .surprise-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      max-height: 420px;
+    }
+
+    .video-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .poem-actions,
+    .video-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .poem-actions button,
+    .video-actions button {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255, 110, 199, 0.14);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .poem-actions button:hover,
+    .video-actions button:hover {
+      background: rgba(255, 110, 199, 0.24);
+    }
+
+    .book-frame {
+      position: relative;
+      padding: 18px;
+      border-radius: 36px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(255, 110, 199, 0.06);
+    }
+
+    .book {
+      position: relative;
+      min-height: 700px;
+      background: linear-gradient(180deg, #0e0b17 0%, #110a1c 100%);
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      transform-style: preserve-3d;
+      animation: float 7s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotateX(0deg); }
+      50% { transform: translateY(-14px) rotateX(1deg); }
+    }
+
+    .book::before,
+    .book::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(255, 110, 199, 0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(124, 79, 255, 0.14), transparent 26%);
+      pointer-events: none;
+    }
+
+    .page {
+      position: absolute;
+      inset: 22px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .page h2 {
+      font-size: 2rem;
+      line-height: 1.1;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .page p {
+      color: rgba(248, 248, 255, 0.85);
+      line-height: 1.8;
+      letter-spacing: 0.01em;
+      margin-bottom: 22px;
+    }
+
+    .page .quote {
+      color: var(--soft);
+      font-size: 1.03rem;
+      font-style: italic;
+      line-height: 1.9;
+      max-width: 34rem;
+    }
+
+    .page .scene {
+      display: grid;
+      gap: 18px;
+      margin-top: 12px;
+    }
+
+    .line {
+      width: 100%;
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255, 110, 199, 0.85), rgba(255, 255, 255, 0.07));
+      opacity: 0.65;
+    }
+
+    .heart-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .heart {
+      width: 38px;
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 110, 199, 0.3), rgba(255, 255, 255, 0.06));
+      box-shadow: 0 0 18px rgba(255, 110, 199, 0.14);
+      color: #ffb6eb;
+      font-size: 1.1rem;
+      animation: pulse 2.4s infinite ease-in-out;
+    }
+
+    .heart:nth-child(2) { animation-delay: 0.2s; }
+    .heart:nth-child(3) { animation-delay: 0.4s; }
+    .heart:nth-child(4) { animation-delay: 0.5s; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+
+    .footer {
+      margin-top: 16px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.92rem;
+    }
+
+    .glow-line {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, rgba(255, 110, 199, 0.12), transparent 40%);
+      mask-image: radial-gradient(circle, transparent 0%, black 32%);
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      background: rgba(255, 110, 199, 0.16);
+      border: 1px solid rgba(255, 110, 199, 0.25);
+      color: #fff;
+      width: fit-content;
+      font-weight: 600;
+      box-shadow: 0 0 18px rgba(255, 110, 199, 0.18);
+    }
+
+    @media (max-width: 880px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero-card,
+      .book-frame {
+        padding: 28px 20px;
+      }
+      .book {
+        min-height: 520px;
+      }
+      .hero-card h1 {
+        font-size: 2.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <div class="sparkles">
+      <span class="sparkle" style="top: 8%; left: 14%; animation-delay: 0s;"></span>
+      <span class="sparkle" style="top: 28%; left: 78%; animation-delay: 1.5s;"></span>
+      <span class="sparkle" style="top: 55%; left: 34%; animation-delay: 2s;"></span>
+      <span class="sparkle" style="top: 72%; left: 63%; animation-delay: 3s;"></span>
+      <span class="sparkle" style="top: 40%; left: 16%; animation-delay: 1s;"></span>
+      <span class="sparkle" style="top: 18%; left: 44%; animation-delay: 2.8s;"></span>
+    </div>
+
+    <div class="hero">
+      <section class="hero-card">
+        <div>
+          <div class="cta">Feliz 2 meses, meu amor!!</div>
+          <h1>Para que você nunca se esqueça que é amada aos gritos por mim. Você diariamente me dá o privilégio de viver ao seu lado.</h1>
+        </div>
+        <p>Tendo você eu sei que não preciso de mais nada. Nesses dois meses juntos, você me fez perceber que o TEMPO é o melhor presente que eu poderia ter, o tempo ao SEU LADO me faz enxergar a vida da mais bela maneira possível. Viver cada dia ao teu lado é estar nos céus, ser amado por você, poder te apreciar, como eu sou feliz por viver cada dia ao seu lado. O simples fato de pensar em você me acalma a alma.</p>
+        <div class="tags">
+          <button class="tag tag-button" id="open-poem" type="button">Amor</button>
+          <button class="tag tag-button" id="open-video" type="button">Doçura</button>
+          <button class="tag tag-button" id="open-surprise" type="button">Surpresa</button>
+          <button class="tag tag-button" id="open-heart" type="button">Meu Coração</button>
+        </div>
+        <div class="footer">Todo tempo do mundo com você ainda é pouco.</div>
+      </section>
+
+      <div class="book-frame">
+        <div class="book">
+          <div class="page">
+            <div>
+              <h2>Livrinho de lembranças</h2>
+              <p class="quote">Todo instante ao seu lado me inspira, e aqui dentro tem muito do meu amor por você princesa. Da play na músiquinha e aperta nos botões pra ler tudo ❤</p>
+            </div>
+            <div class="spotify-embed">
+              <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/3fLqmaO4vvZpFZSZy52VMp?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+            <div class="scene">
+              <div class="line"></div>
+              <div class="line" style="width: 85%;"></div>
+              <div class="line" style="width: 95%;"></div>
+            </div>
+            <div class="heart-row">
+              <span class="heart">❤</span>
+              <span class="heart">✨</span>
+              <span class="heart">💌</span>
+              <span class="heart">🌙</span>
+            </div>
+          </div>
+          <div class="poem-page" id="poem-page">
+            <div>
+              <h2> As Sem-Razões do Amor</h2>
+              <p class="quote">Eu te amo porque eu te amo, um amor que não pode ser explicado racionalmente, apenas sentido, vivido. Você faz meu coração pulsar, bater mais rápido, eu te amo a cada batida do meu coração Beatriz 💗</p>
+            </div>
+            <div class="poem-text">
+              <p>Eu te amo porque te amo.
+Não precisas ser amante,
+e nem sempre sabes sê-lo.
+Eu te amo porque te amo.
+Amor é estado de graça
+e com amor não se paga.
+
+Amor é dado de graça,
+é semeado no vento,
+na cachoeira, no eclipse.
+Amor foge a dicionários
+e a regulamentos vários.
+
+Eu te amo porque não amo
+bastante ou de mais a mim.
+Porque amor não se troca,
+não se conjuga nem se ama.
+Porque amor é amor a nada,
+feliz e forte em si mesmo.
+
+Amor é primo da morte,
+e da morte vencedor,
+por mais que o matem (e matam)
+a cada instante de amor.</p>
+            </div>
+            <div class="poem-actions">
+              <button id="close-poem" type="button">Voltar ao livro</button>
+            </div>
+          </div>
+          <div class="video-page" id="video-page">
+            <div>
+              <h2>Minha doçura</h2>
+              <p class="quote">PRINCESA MARAVILHOSA, fiquei tão apaixonado no seu rostinho lindo nesse vídeo. Você gravou dizendo que queria ver se ficou acabada, mas como isso poderia ser possível? você é um anjinho amor, é você quem ilumina a minha vida com sua beleza, VOCÊ É A MULHER MAIS BELA DO UNIVERSO EU TE AMO TANTO COISA LINDA</p>
+            </div>
+            <div class="video-box">
+              <video class="video-player" autoplay muted loop playsinline>
+                <source src="doçura.mp4" type="video/mp4" />
+                Seu navegador não suporta vídeo HTML5.
+              </video>
+            </div>
+            <div>
+              <h3>VOCÊ É MEU DOCE</h3>
+              <p class="quote">Ela é tão meiga, você é pra mim como os cookies são pra você, meu doce favorito.</p>
+            </div>
+            <div class="video-actions">
+              <button id="close-video" type="button">Voltar ao livro</button>
+            </div>
+          </div>
+          <div class="surprise-page" id="surprise-page">
+            <div>
+              <h2>Surpresinha</h2>
+              <p class="quote">Hoje fazemos 2 meses, e como tem sido bom aproveitar os dias com você ao meu lado. </p>
+            </div>
+            <div class="image-box">
+              <img class="surprise-image" src="2704.jpeg" alt="Minha surpresa" />
+            </div>
+            <div>
+              <h3>27/04</h3>
+              <p class="quote">Minha namorada, minha companheira, "i will always say yes". Eu te escolho como MINHA nessa vida e em todas as outras vidas, você é a minha maior certeza.</p>
+            </div>
+            <div class="video-actions">
+              <button id="close-surprise" type="button">Voltar ao livro</button>
+            </div>
+          </div>
+          <div class="heart-page" id="heart-page">
+            <div>
+              <h2>Meu coração</h2>
+              <p class="quote">Você tem meu coração inteiramente pra você.</p>
+            </div>
+            <div class="poem-text">
+              <p>Você tem a chave do meu coração Beatriz, seu rosto é a primeira coisa que me vem a mente quando escuto a palavra "amor" eu durmo e sonho com você, tem noção do quanto eu quero construir uma vida com você? do quanto eu tenho vontade de ter uma linda família com você, eu nunca quis tanto algo como eu quero ter uma filha que tenha os seus olhos castanhos. Estamos fazendo 2 meses de namoro, mas logo estaremos fazendo 2 anos e depois 20, casados, veremos e seremos inspiração de amor para os nossos filhos. Quero criar gatinhos e cachorros com você, quero viajar o mundo com você, temos tantas coisas a viver juntos, quero te amar de todas as formas possíveis. Obrigado por ser tanto assim pra mim meu amor, não há nada que me faça mais feliz do que namorar você, do que ver a sua felicidade. Você é quem faz cada sorriso meu, que faz cada momento valer a pena. A cada instante ao seu lado, eu vejo o quanto o nosso amor é verdadeiro, puro e forte. Quero cultivar você com cuidado, abraçar você com carinho e te proteger com todo o meu amor. 
+Meu coração é seu, hoje e sempre. 💗</p>
+            </div>
+            <div class="video-actions">
+              <button id="close-heart" type="button">Voltar ao livro</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const openPoemButton = document.getElementById('open-poem');
+    const openVideoButton = document.getElementById('open-video');
+    const openSurpriseButton = document.getElementById('open-surprise');
+    const openHeartButton = document.getElementById('open-heart');
+    const poemPage = document.getElementById('poem-page');
+    const videoPage = document.getElementById('video-page');
+    const surprisePage = document.getElementById('surprise-page');
+    const heartPage = document.getElementById('heart-page');
+    const bookPage = document.querySelector('.book > .page');
+    const closePoemButton = document.getElementById('close-poem');
+    const closeVideoButton = document.getElementById('close-video');
+    const closeSurpriseButton = document.getElementById('close-surprise');
+    const closeHeartButton = document.getElementById('close-heart');
+
+    const closeAllPages = () => {
+      poemPage.classList.remove('active');
+      videoPage.classList.remove('active');
+      surprisePage.classList.remove('active');
+      heartPage.classList.remove('active');
+    };
+
+    openPoemButton.addEventListener('click', () => {
+      closeAllPages();
+      poemPage.classList.add('active');
+      bookPage.style.display = 'none';
+    });
+
+    openVideoButton.addEventListener('click', () => {
+      closeAllPages();
+      videoPage.classList.add('active');
+      bookPage.style.display = 'none';
+    });
+
+    openSurpriseButton.addEventListener('click', () => {
+      closeAllPages();
+      surprisePage.classList.add('active');
+      bookPage.style.display = 'none';
+    });
+
+    openHeartButton.addEventListener('click', () => {
+      closeAllPages();
+      heartPage.classList.add('active');
+      bookPage.style.display = 'none';
+    });
+
+    closePoemButton.addEventListener('click', () => {
+      closeAllPages();
+      bookPage.style.display = 'flex';
+    });
+
+    closeVideoButton.addEventListener('click', () => {
+      closeAllPages();
+      bookPage.style.display = 'flex';
+    });
+
+    closeSurpriseButton.addEventListener('click', () => {
+      closeAllPages();
+      bookPage.style.display = 'flex';
+    });
+
+    closeHeartButton.addEventListener('click', () => {
+      closeAllPages();
+      bookPage.style.display = 'flex';
+    });
+  </script>
+</body>
+</html>
+'@
